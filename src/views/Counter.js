@@ -1,5 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 
+import * as Actions from '../Actions.js';
+import CounterStore from '../stores/CounterStore.js';
+
 const buttonStyle = {
     margin: '10px'
 };
@@ -9,11 +12,12 @@ class Counter extends Component {
         console.log('constructor');
         super(props);
 
+        this.onChange = this.onChange.bind(this);
         this.onClickIncrementButton = this.onClickIncrementButton.bind(this);
         this.onClickDecrementButton = this.onClickDecrementButton.bind(this);
 
         this.state = {
-            count: props.initialValue
+            count: CounterStore.getCounterValues()[props.caption]
         }
     }
 
@@ -23,6 +27,7 @@ class Counter extends Component {
 
     componentDidMount() {
         console.log("componentDidMount");
+        CounterStore.addChangeListener(this.onChange);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -43,21 +48,20 @@ class Counter extends Component {
 
     componentWillUnmount() {
         console.log("componentWillUnmount");
+        CounterStore.removeChangeListener(this.onChange);
+    }
+
+    onChange() {
+        const newCount = CounterStore.getCounterValues()[this.props.caption];
+        this.setState({ count: newCount });
     }
 
     onClickIncrementButton() {
-        this.updateCount(true);
+        Actions.increment(this.props.caption);
     }
 
     onClickDecrementButton() {
-        this.updateCount(false);
-    }
-
-    updateCount(isIncrement) {
-        const previousValue = this.state.count;
-        const newValue = isIncrement ? previousValue + 1 : previousValue - 1;
-        this.setState({count: newValue});
-        this.props.onUpdate(newValue, previousValue);
+        Actions.decrement(this.props.caption);
     }
 
     render() {
@@ -74,14 +78,7 @@ class Counter extends Component {
 }
 
 Counter.propTypes = {
-    caption: PropTypes.string.isRequired,
-    initValue: PropTypes.number,
-    onUpdate: PropTypes.func
+    caption: PropTypes.string.isRequired
 }
-
-Counter.defaultProps = {
-    initialValue: 0,
-    onUpdate: f => f
-};
 
 export default Counter;
